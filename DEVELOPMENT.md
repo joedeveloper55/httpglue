@@ -10,7 +10,7 @@ Beyond simplicity, the second most important goal of httpglue is transparency. W
 
 Keeping dependencies as minimal as is possible is also a major goal. httpglue must use only the standard library.
 
-See [the design docs](DESIGN.md) for more details on the httpglue philosophy.
+See [the design docs](https://github.com/joedeveloper55/httpglue/blob/master/DESIGN.md) for more details on the httpglue philosophy.
 
 ## src Control Repo
 

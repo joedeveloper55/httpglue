@@ -123,7 +123,7 @@ you can copy this into a file named "my_async_app.py" and simply run it with:
 
 > pip install httpglue; pip install uvicorn; uvicorn my_async_app:app
 
-If you want to know more, check out [our documentation](https://github.com/joedeveloper55/httpglue/DOCUMENTATION.md).
+If you want to know more, check out [our documentation](https://github.com/joedeveloper55/httpglue/blob/master/DOCUMENTATION.md).
 
 Also, For more robust examples that showcase how you can leverage httpglue to build more serious http applications, check out:
 

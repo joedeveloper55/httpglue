@@ -2,7 +2,7 @@
 
 Welcome to the httpglue tutorial. This tutorial aims to introduce you to the key concepts and features of httpglue, giving you a nice big picture view of the framework.
 
-If you're already familiar with the frameowrk and just need an api refresher, [go over to the api docs](API_DOCUMENTATION.md)
+If you're already familiar with the frameowrk and just need an api refresher, [go over to the api docs](https://github.com/joedeveloper55/httpglue/blob/master/API_DOCUMENTATION.md)
 
 The examples here are very trite. This is intentional. Simpler examples make for better illumination of concepts for begginers. If more realistic examples of what actal httpglue apps could look like are what you're looking for, we refer you to:
 

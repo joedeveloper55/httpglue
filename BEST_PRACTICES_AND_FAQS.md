@@ -17,7 +17,7 @@ tool at your disposal for writing fluent and idiomatic unit tests with httpglue.
 Basically, to write your unit tests, you import/construct the App object representing
 your application, and then in your unit tests you construct Req objects, pass them into
 this handle_req method, and then validate the returned Res object. No wsgi or asgi
-setup or specific logic is required when unit testing this way. See the [an example of httpglue unit testing here](example_proj/tests/test_app.py)
+setup or specific logic is required when unit testing this way. See the [an example of httpglue unit testing here](https://github.com/joedeveloper55/httpglue/blob/master/example_proj/tests/test_app.py)
 
 ## Creating a catch-all handler
 
