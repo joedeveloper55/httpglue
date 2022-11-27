@@ -275,7 +275,7 @@ If you want to know more, check out [our comprehensve documentation](https://git
 
 Also, For more robust examples that showcase how you can leverage httpglue to build more serious http applications, check out:
 
-* [The official httpglue wsgi exemplar project]() - An exemplar halfway between a trite "hello world" exemplar and a real application. It is a simple CRUD-type json rest api for a single resource that persists data to postgres, authenticates users via basic auth, and leverages a thread pool for its database connections. It also comes with thorough unit tests. This is the best place to go to learn the idiomatic structure of an httpglue wsgi application and idiomatic patterns for testing such an application.   
+* [The official httpglue wsgi exemplar project](https://github.com/joedeveloper55/httpglue/tree/master/example_proj) - An exemplar halfway between a trite "hello world" exemplar and a real application. It is a simple CRUD-type json rest api for a single resource that persists data to postgres, authenticates users via basic auth, and leverages a thread pool for its database connections. It also comes with thorough unit tests. This is the best place to go to learn the idiomatic structure of an httpglue wsgi application and idiomatic patterns for testing such an application.   
 
 * [The official httpglue asgi exemplar project]() - An exemplar just like the above wsgi one, except it leverages python's async features. This is the best place to go to learn the idiomatic structure of an httpglue asgi apllication and idiomatic patterns for testing such an application.   
 

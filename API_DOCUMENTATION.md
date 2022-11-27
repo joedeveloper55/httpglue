@@ -1,6 +1,6 @@
 # API Documentation
 
-These docs give you the details of the various classes and exceptions that make up the httpglue api. Take a look at the [The official httpglue wsgi exemplar project]() and [The official httpglue asgi exemplar project]() if you'd prefer to just see some examples. 
+These docs give you the details of the various classes and exceptions that make up the httpglue api. Take a look at the [The official httpglue wsgi exemplar project](https://github.com/joedeveloper55/httpglue/tree/master/example_proj) and [The official httpglue asgi exemplar project]() if you'd prefer to just see some examples. 
 
 ## Intro
 
