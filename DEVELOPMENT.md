@@ -4,9 +4,9 @@ httpglue is an extremely minimal framework for writing http applications (partic
 
 It is built of the back of wsgi and asgi, offering application developers the choice to either make a wsgi or an asgi app.
 
-Its goal is to be the simplest python http framework available while still being just good enough for the building of small but real http apps. Features and conveniences have been ruthlessly cut in pursuit of this goal. Such is the path of httpglue and should be the guiding principle of contributors to this codebase.
+Its goal is to be the simplest python http framework available while still being just about good enough for the building of small but real http apps. Features and conveniences have been ruthlessly cut in pursuit of this goal. Such is the path of httpglue and should be the guiding principle of contributors to this codebase.
 
-Beyond simplicity, the second most important goal of httpglue is transparency. What the framework is doing at any time and what happens in certain cases must never be a mystery to users of httpglue. The api and framework behavior must be sufficiently small, documented, and un-abstracted such that an experiencd python developer using it can thoroughly predict and understand what is going on in their apps, and hold the whole api in their heads.
+Beyond simplicity, the second most important goal of httpglue is transparency. What the framework is doing at any time and what happens in certain cases must never be a mystery to users of httpglue. The api and framework behavior must be sufficiently small, documented, and un-abstracted such that an experiencd python developer using it can thoroughly predict and understand what is going on in their apps, and hold the whole api and request flow in their heads.
 
 Keeping dependencies as minimal as is possible is also a major goal. httpglue must use only the standard library.
 
@@ -40,7 +40,3 @@ to upload this project to a repo
 
 to leave your env (run this when done working on this project for the day):
 > deactivate
-
-## Authors
-
-* Joseph P McAnulty

@@ -5,10 +5,10 @@ setup(
     version='1.0.0',
     author='Joseph P McAnulty',
     author_email='joedeveloper55@gmail.com',
-    packages=['httpglue'],
+    py_modules=['httpglue'],
     url='https://github.com/joedeveloper55/httpglue',
     download_url='',
-    description='an extremely minimal wsgi and asgi http application framework', 
+    description='an extremely minimal wsgi and asgi http application framework, for rest api microservices',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     classifiers=[
