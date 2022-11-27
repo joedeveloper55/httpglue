@@ -19,7 +19,7 @@ Becasue transparency is a central concern, the framework was designed to make ap
 
 To quickly get the flavor of httpglue, take a look at the below hello_world.py example:
 
-```
+```python
 import logging
 import time
 
@@ -95,7 +95,7 @@ you can actually play around with this example with no other steps. An http appl
 
 Since testing is important for this framework, here's an example of a single test case for the above app:
 
-```
+```python
 import unittest
 
 from httpglue import Request
@@ -127,7 +127,8 @@ If you copy this to a file named test_my_app.py in the same directory as my_app.
 > PYTHONPATH=. python -m unittest test_my_app
 
 As mentioned above, httpglue supports asgi as well as wsgi. Here's a simple eqivalent asgi app:
-```
+
+```python
 import asyncio
 import logging
 
@@ -215,7 +216,7 @@ you can copy this into a file named "my_async_app.py" and run it with:
 
 And here's a sample test case for your asgi app:
 
-```
+```python
 import asyncio
 import unittest
 
