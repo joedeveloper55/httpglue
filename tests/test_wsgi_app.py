@@ -8,6 +8,7 @@ from unittest import mock
 
 from httpglue import Request
 from httpglue import Response
+from httpglue import Headers
 from httpglue import WsgiApp
 from httpglue import NoMatchingMethodError
 from httpglue import NoMatchingPathError
@@ -667,11 +668,11 @@ class TestAppWSGIMappingToRequestObject(unittest.TestCase):
 
         self.assertEqual(req.method, 'GET')
         self.assertEqual(req.path, '/dummy_path')
-        self.assertEqual(req.headers, {
-            'Content-Length': 13,
+        self.assertEqual(req.headers, Headers({
+            'Content-Length': '13',
             'Content-Type': 'text/plain',
             'X-Dummy-Header': 'dummy_content'
-        })
+        }))
         self.assertEqual(req.body, b'dummy content')
         self.assertEqual(req.query_str, '')
         self.assertEqual(req.host, 'dummy_host')
@@ -714,7 +715,7 @@ class TestAppWSGIMappingToRequestObject(unittest.TestCase):
 
         self.assertEqual(req.method, 'GET')
         self.assertEqual(req.path, '')
-        self.assertEqual(req.headers, {})
+        self.assertEqual(req.headers, Headers({}))
         self.assertEqual(req.body, b'')
         self.assertEqual(req.query_str, '')
         self.assertEqual(req.host, 'dummy_host')
