@@ -5,6 +5,30 @@ import logging
 import re
 
 
+_ASCII_CHARS = {
+    chr(val)
+    for val in range(0, 128)
+}
+
+_CTL_CHARS = {  # (octets 0 - 31) and DEL (127)>
+    chr(val)
+    for val in range(0, 32)
+}
+_CTL_CHARS.add(chr(127))
+
+_SEP_CHARS = {
+    '(', ')', '<', '>', '@',
+    ',', ';', ':', '\\', '/',
+    '[', ']', '?', '=', '{',
+    '}', ' ', '\t'
+}
+_VALID_RFC_2616_TOKEN_CHARS = \
+    _ASCII_CHARS - _CTL_CHARS - _SEP_CHARS
+
+_VALID_RFC_2616_TEXT_CHARS = \
+    (_ASCII_CHARS - _CTL_CHARS) | {' ', '\t'}
+
+
 class NoMatchingPathError(Exception):
     def __init__(self, path, path_specs):
         message = f'The path \'{path}\' did not match any of {path_specs}'
@@ -57,6 +81,222 @@ class WSGIResponseMAppingError(Exception):
         )
         super().__init__(message)
 
+# TODO may want to fine tune the many exceptions that could be raised
+# from within class internals. Also need to work on descriptions
+# TODO also may want to swallow up common dict exceptions and replce them
+# with my own ones to simplify errors.
+class Headers:
+
+    def __init__(self, *args, **kwargs):
+        if len(args) == 0:
+            self._impl_dict = dict()
+        elif len(args) == 1 and self._looks_like_a_mapping(args[0]):
+            provisional_impl_dict = dict(args[0])
+            self._validate_mapping(provisional_impl_dict)
+            provisional_impl_dict = {
+                self._convert_key_to_camel_dash_form(k): v
+                for k, v in provisional_impl_dict.items()
+            }
+            self._impl_dict = provisional_impl_dict
+        elif len(args) == 1:  # assume an iterable of two, tuples
+            provisional_impl_dict = dict(args[0])
+            self._validate_mapping(provisional_impl_dict)
+            provisional_impl_dict = {
+                self._convert_key_to_camel_dash_form(k): v
+                for k, v in provisional_impl_dict.items()
+            }
+            self._impl_dict = provisional_impl_dict
+        else:
+            raise TypeError('too many positional agruments')
+
+        # support kwargs
+        for k, v in kwargs.items():
+            self._validate_key(k)
+            k = self._convert_key_to_camel_dash_form(k)
+            self._validate_value(v)
+            self._impl_dict[k] = v
+
+    @classmethod
+    def fromkeys(cls, keys, val=''):
+        return cls((k, val) for k in keys)
+
+    def _normalize_header_val(self, val):
+        val = val.lstrip().rstrip()
+        val = ' '.join(val.split())
+        return val
+
+    def _convert_key_to_camel_dash_form(self, key):
+        key_parts = key.split('-')
+        key_parts = [
+            val[0].upper() + val[1:].lower()
+            for val in key_parts]
+        key = '-'.join(key_parts)
+        return key
+
+    def _validate_key(self, key):
+        if type(key) != str:
+            raise TypeError( # add specific value to message?
+                'httpglue.Headers key must be of type str, not '
+                '%s' % type(key))
+
+        if len(key) < 1:
+            raise ValueError(
+                'httpglue.Headers key must be at least one char long')
+
+        inappropriate_chars = set(key) - _VALID_RFC_2616_TOKEN_CHARS
+
+        if len(inappropriate_chars) != 0:
+            raise ValueError(
+                'httpglue.Headers key %s is not a valid rfc2616 token. '
+                'It had %s chars in it which are not allowed. '
+                'Only these chars are allowed: %s.' % (
+                    key, inappropriate_chars,
+                    _VALID_RFC_2616_TOKEN_CHARS
+                ))
+
+    def _validate_value(self, val):
+        if type(val) != str:
+            raise TypeError(
+                'httpglue.Headers value must be of type str, not '
+                '%s' % type(val))
+
+        inappropriate_chars = set(val) - _VALID_RFC_2616_TEXT_CHARS
+
+        if len(inappropriate_chars) != 0:
+            raise ValueError(
+                'httpglue.Headers value %s is not a valid rfc2616 text. '
+                'It had %s chars in it which are not allowed. '
+                'Only these chars are allowed: %s.' % (
+                    val, inappropriate_chars,
+                    _VALID_RFC_2616_TEXT_CHARS
+                )) 
+
+    def _looks_like_a_mapping(self, val):
+        # here, we check a bunch of properties/methods
+        # to figure out if some object is highly likely
+        # to be some kind of 'Mapping'. We opted
+        # for this approach instead of just testing for abstract
+        # base classes to maximize the flexibility and
+        # interoperability of the headers class
+        minimum_mapping_methods = {
+            '__getitem__', 
+            '__iter__', 
+            '__len__',
+            '__contains__',
+            'keys',
+            'items',
+            'values',
+            'get',
+            '__eq__',
+            '__ne__'
+        }
+        return set(dir(val)) >= minimum_mapping_methods
+
+    def _validate_mapping(self, mapping):
+        for key in mapping:
+            self._validate_key(key)
+            self._validate_value(mapping[key])
+
+    def __contains__(self, key):
+        self._validate_key(key)
+        key = self._convert_key_to_camel_dash_form(key)
+        return key in self._impl_dict
+        
+    def __getitem__(self, key):
+        self._validate_key(key)
+        key = self._convert_key_to_camel_dash_form(key)
+        return self._impl_dict[key]
+
+    def __setitem__(self, key, val):
+        self._validate_key(key)
+        key = self._convert_key_to_camel_dash_form(key)
+        self._validate_value(val)
+        self._impl_dict[key] = val
+
+    def __delitem__(self, key):
+        self._validate_key(key)
+        key = self._convert_key_to_camel_dash_form(key)
+        del self._impl_dict[key]
+
+    def __eq__(self, other):
+        if type(other) != Headers:
+            raise TypeError(
+                'expected %s, got %s' % (Headers, type(other)))
+
+        key_diff = set(self.keys()) ^ set(other.keys())
+        if key_diff != set():
+            return False
+
+        for k in self.keys():
+            if (self._normalize_header_val(self[k]) !=
+                self._normalize_header_val(other[k])
+            ):
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not self == other
+    
+    __hash__ = None
+        
+    def __iter__(self):
+        return iter(self._impl_dict)
+        
+    def items(self):
+        return self._impl_dict.items()
+        
+    def keys(self):
+        return self._impl_dict.keys()
+
+    def values(self):
+        return self._impl_dict.values()
+
+    def copy(self):
+        return Headers(self)
+
+    def __len__(self):
+        return len(self._impl_dict)
+
+    def __repr__(self):
+        return ''.join([
+            'Headers(',
+            repr(self._impl_dict),
+            ')'
+        ])
+    
+    def __str__(self):
+        return '\r\n'.join([
+            ': '.join([name, self._normalize_header_val(value)])
+            for name, value in self.items()
+        ])
+
+    def get(self, key, default=None):
+        self._validate_key(key)
+        key = self._convert_key_to_camel_dash_form(key)
+        return self._impl_dict.get(key, default)
+
+    def setdefault(self, key, default=''):
+        self._validate_key(key)
+        self._validate_value(default)
+        key = self._convert_key_to_camel_dash_form(key)
+        return self._impl_dict.setdefault(key, default)
+
+    def pop(self, key, default=None):
+        self._validate_key(key)
+        key = self._convert_key_to_camel_dash_form(key)
+        return self._impl_dict.pop(key, default)
+
+    def popitem(self):
+        return self._impl_dict.popitem()
+
+    def clear(self):
+        self._impl_dict.clear()
+
+    def update(self, other):
+        self._validate_mapping(other)
+        self._impl_dict.update(other)
+
 
 class Request:
     def __init__(
@@ -96,6 +336,12 @@ class Request:
                 'method attribute of httpglue.Request object '
                 'must be of type str, got %s' % type(value)
             )
+
+        inappropriate_chars = set(value) - _VALID_RFC_2616_TOKEN_CHARS
+
+        if len(inappropriate_chars) != 0:
+            raise ValueError()  # TODO write message
+
         self._method = value
 
     @property
@@ -151,12 +397,13 @@ class Request:
 
     @headers.setter
     def headers(self, value):
-        if type(value) is not dict:
+        if type(value) not in (dict, Headers):
             raise TypeError(
                 'headers attribute of httpglue.Response object '
-                'must be of type dict, got %s' % type(value)
+                'must be of type dict or httpglue.Headers, '
+                'got %s' % type(value)
             )
-        self._headers = value
+        self._headers = Headers(value) if type(value) else value
 
     @property
     def body(self):
@@ -263,12 +510,9 @@ class Request:
             f'{self.path}{query_str_part} '
             f'{self.http_version}'
         )
-        headers_part = '\n'.join(
-            f'{key}: {value}'
-            for key, value in self.headers.items()
-        )
+        headers_part = str(self.headers)
 
-        return f'{request_line_part}\n{headers_part}\n\n{self.body}'
+        return f'{request_line_part}\r\n{headers_part}\r\n\r\n{self.body}'
         return super().__str__()
 
 
@@ -315,6 +559,11 @@ class Response:
                 'must be of type str, got %s' % type(value)
             )
 
+        inappropriate_chars = set(value) - _VALID_RFC_2616_TOKEN_CHARS
+
+        if len(inappropriate_chars) != 0:
+            raise ValueError()  # TODO write message
+
         self._reason = value
 
     @property
@@ -323,12 +572,14 @@ class Response:
 
     @headers.setter
     def headers(self, value):
-        if type(value) is not dict:
+        if type(value) not in (dict, Headers):
             raise TypeError(
                 'headers attribute of httpglue.Response object '
-                'must be of type dict, got %s' % type(value)
+                'must be of type dict or httpglue.Headers, '
+                'got %s' % type(value)
             )
-        self._headers = value
+        
+        self._headers = Headers(value) if type(value) == dict else value
 
     @property
     def body(self):
@@ -354,12 +605,9 @@ class Response:
 
     def __str__(self):
         status_part = f'HTTP {self.status} {self.reason}'
-        headers_part = '\n'.join(
-            f'{key}: {value}'
-            for key, value in self.headers.items()
-        )
+        headers_part = str(self.headers)
 
-        return f'{status_part}\n{headers_part}\n\n{self.body}'
+        return f'{status_part}\r\n{headers_part}\r\n\r\n{self.body}'
 
 
 class WsgiApp:
@@ -472,14 +720,14 @@ class WsgiApp:
         """
         try:
             req_headers = {
-                self._extract_header_name(key): val
+                self._extract_header_name(key): str(val)
                 for (key, val) in environ.items()
                 if key.startswith('HTTP_')
             }
             if 'CONTENT_TYPE' in environ:
-                req_headers['Content-Type'] = environ['CONTENT_TYPE']
+                req_headers['Content-Type'] = str(environ['CONTENT_TYPE'])
             if 'CONTENT_LENGTH' in environ:
-                req_headers['Content-Length'] = environ['CONTENT_LENGTH']
+                req_headers['Content-Length'] = str(environ['CONTENT_LENGTH'])
 
             # The usage of the .get(VAR, '') idiom below is due
             # to the stipulations in the wsgi spec stating that
