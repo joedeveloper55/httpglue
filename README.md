@@ -1,8 +1,8 @@
 # httpglue
 
-httpglue is an **extremely minimal** wsgi and asgi http application framework.
+httpglue is an **extremely minimal** python http application framework.
 
-It is optimized for building small to medium sized rest apis and http microservices.
+It is optimized for building small to medium sized rest apis and http microservices that can be run on wsgi or asgi servers.
 
 It pushes simple to its limits while still providing just enough structure and functionality to be useful. It is a kind of *nanoframework* if you will, taking simplicity and minimalism a bit further than the typical 'microframework'.
 
@@ -93,7 +93,7 @@ If you simply copy this to a file named "my_app.py" and run it with
 
 you can actually play around with this example with no other steps. An http application is now servicing http requests at localhost:8080.
 
-Since testing is important for this framework, here's an example of a single test case for the above app:
+Since testability is important to this framework, here's an example of a single test case for the above app:
 
 ```python
 import unittest

@@ -12,7 +12,7 @@ The most important quality of httpglue is that it is minimal. *It is a nanoframe
 
 httpglue does one single thing: allowing a programmer to basically map http requests to server side code which does things and generates responses. It is *glue* between http and any other functionality you can imagine. httpglue glue does not have integration points for your favorite orm, it does not come with a static webserver, it does not have cookie handling logic, it does not support https directly, it does not come with template rendering, it does not tell you how to build your domain objects, etc. It will not ever include this functionality in to the core framework. ever.
 
-httpglue just litens for web requests, dispatches them to some code, and offers a means of making responses.
+httpglue just listens for web requests, dispatches them to some code, and offers a means of making responses.
 
 httpglue is meant to be an api so small and flat that an experienced python programmer could learn and memorize the entire API in less then a few hours, maybe even less than an hour; This minimalism is extremely empowering to developer flexibility, creativty, and efficiency; This minimalism enables developers and architects to build an http microservice into exactly what it needs to be from the ground up, gradually adding what they need, rather than starting with something bigger and trying to chisel away at or ignore the things they don't need.
 
