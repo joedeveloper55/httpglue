@@ -8,7 +8,7 @@ setup(
     py_modules=['httpglue'],
     url='https://github.com/joedeveloper55/httpglue',
     download_url='',
-    description='an extremely minimal wsgi and asgi http application framework, for rest api microservices',
+    description='an extremely minimal python http application framework for rest api microservices, supports wsgi or asgi',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     classifiers=[
