@@ -6,7 +6,7 @@ It is optimized for building small to medium sized rest apis and http microservi
 
 It pushes simple to its limits while still providing just enough structure and functionality to be useful. It is a kind of *nanoframework* if you will, taking simplicity and minimalism a bit further than the typical 'microframework'.
 
-Excluding exceptions, the entire api only defines only five classes: WsgiApp, AsgiApp, Headers, Request and Response. The WsgiApp object has only 5 public methods; The AsgiApp object has only 9 public methods. The Headers, Request, and Response objects are just plain old python objects for representing http headers, http requests, and http responses, respectively.
+Excluding exceptions, the entire api defines only five classes: WsgiApp, AsgiApp, Headers, Request and Response. The WsgiApp object has only 5 public methods; The AsgiApp object has only 9 public methods. The Headers, Request, and Response objects are just plain old python objects.
 
 There are no dependencies on any third party libraries. The standard library is all that is required.
 It is 100% pure python. It will work wherever you have a recent enough (3.6 or greater) python installation without any hassle.
@@ -42,6 +42,8 @@ def make_app():
         )
     )
 
+    app.sleepytime = time.sleep
+
     app.register_endpoint(
         ['GET'], '/hello',
         handle_get_hello
@@ -61,7 +63,7 @@ def make_app():
 
 def handle_get_hello(app, req):
     app.logger.info('saying hello in a second.')
-    time.sleep(1)
+    app.sleepytime(1)
     return Response(
         status=200,
         headers={},
@@ -97,6 +99,7 @@ Since testability is important to this framework, here's an example of a single 
 
 ```python
 import unittest
+from unittest import mock
 
 from httpglue import Request
 
@@ -116,7 +119,10 @@ class TestGetHelloEndpoint(unittest.TestCase):
             body=b''
         )
 
-        res = self.app.handle_request(req)
+        # mock away the wait operation for this test
+        with mock.patch.object(self.app, 'sleepytime') as m:
+            res = self.app.handle_request(req)
+            m.assert_called()
 
         self.assertEqual(res.status, 200)
         self.assertEqual(res.body, b'Hello world!')
@@ -153,14 +159,15 @@ def make_app():
 
     async def startup_routine(app):
         app.logger.info('ready to serve requests in 2 seconds.')
-        await asyncio.sleep(2)
+        app.sleepytime = asyncio.sleep
+        await app.sleepytime(2)
         app.logger.info('ready now.')
 
     app.register_startup_routine(startup_routine)
 
     async def shutdown_routine(app):
         app.logger.info('shutting down in 2 seconds.')
-        await asyncio.sleep(2)
+        await app.sleepytime(2)
         app.logger.info('shutdown successful.')
 
     app.register_shutdown_routune(shutdown_routne)
@@ -184,7 +191,7 @@ def make_app():
 
 async def handle_get_hello(app, req):
     app.logger.info('saying hello in a second.')
-    await asyncio.sleep(1)
+    await app.sleepytime(1)
     return Response(
         status=200,
         headers={},
@@ -219,6 +226,7 @@ And here's a sample test case for your asgi app:
 ```python
 import asyncio
 import unittest
+from unittest import mock
 
 from httpglue import Request
 
@@ -252,9 +260,11 @@ class TestGetHelloEndpoint(unittest.TestCase):
             body=b''
         )
 
-        res = self.event_loop.run_until_complete(
-            self.app.handle_request(req)
-        )
+        with mock.patch.object(self.app, 'sleepytime') as m:
+            res = self.event_loop.run_until_complete(
+                self.app.handle_request(req)
+            )
+            m.assert_called()
 
         self.assertEqual(res.status, 200)
         self.assertEqual(res.body, b'Hello world!')
