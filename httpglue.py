@@ -340,7 +340,13 @@ class Request:
         inappropriate_chars = set(value) - _VALID_RFC_2616_TOKEN_CHARS
 
         if len(inappropriate_chars) != 0:
-            raise ValueError()  # TODO write message
+            raise ValueError(
+                'httpglue.Request.method \'%s\' is not a valid rfc2616 token. '
+                'It had %s chars in it which are not allowed. '
+                'Only these chars are allowed: %s.' % (
+                    value, inappropriate_chars,
+                    _VALID_RFC_2616_TOKEN_CHARS
+                ))
 
         self._method = value
 
@@ -388,6 +394,11 @@ class Request:
             raise TypeError(
                 'query_str attribute of httpglue.Request object '
                 'must be of type str, got %s' % type(value)
+            )
+        if '?' in value:
+            raise ValueError(
+                '? was in the query_Str: %s. It is implicit, '
+                'don\'t include it. Do not ' % value
             )
         self._query_str = value
 
@@ -484,9 +495,6 @@ class Request:
             f'?{self.query_str}'
         )
 
-    def deep_validate(self):
-        raise NotImplementedError()
-
     def __repr__(self):
         args_part = ', '.join([
             f'method={repr(self.method)}',
@@ -562,7 +570,13 @@ class Response:
         inappropriate_chars = set(value) - _VALID_RFC_2616_TOKEN_CHARS
 
         if len(inappropriate_chars) != 0:
-            raise ValueError()  # TODO write message
+            raise ValueError(
+                'httpglue.Response.reason \'%s\' is not a valid rfc2616 token. '
+                'It had %s chars in it which are not allowed. '
+                'Only these chars are allowed: %s.' % (
+                    value, inappropriate_chars,
+                    _VALID_RFC_2616_TOKEN_CHARS
+                ))
 
         self._reason = value
 
@@ -670,7 +684,7 @@ class WsgiApp:
         self.default_fallback_err_res = default_fallback_err_res
 
         """
-        The _endpoint_table property below will have a stucture like this:
+        The _endpoint_table attribute below will have a stucture like this:
 
         [
             {
@@ -685,7 +699,7 @@ class WsgiApp:
         self._endpoint_table = []
 
         """
-        The err_routing_table property below will have a stucture
+        The err_routing_table attribute below will have a stucture
         like this:
 
         [
