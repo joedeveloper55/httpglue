@@ -1,6 +1,6 @@
-from httpglue import Request, Response
+from httpglue import Response
 
-from models import Widget
+from models.widgets import Widget
 
 
 def get_widgets(app, req):
@@ -8,9 +8,9 @@ def get_widgets(app, req):
 
     widgets = app.widget_store.get_widgets()
 
-    widgets_data = [w.to_ds() for w in widgets]
+    widgets_data = [w.to_dict() for w in widgets]
 
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=200,
         headers={
             'Content-Type': 'application/json'
@@ -22,13 +22,16 @@ def get_widgets(app, req):
 def put_widgets(app, req):
     app.basic_auth.authenticate(req)
 
-    widgets_data = app.content_types.accept(['application/json'], req)
+    widgets_data = app.content_types.deserialize_body(
+        ['application/json'],
+        req
+    )
 
-    widgets = [Widget.from_ds(wd) for wd in widgets_data]
+    widgets = [Widget.from_dict(wd) for wd in widgets_data]
 
     app.widget_store.put_widgets(widgets)
 
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=200,
         headers={
             'Content-Type': 'application/json'

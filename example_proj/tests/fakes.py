@@ -1,3 +1,8 @@
+import contextlib
+
+import helpers.auth
+
+
 class FakeWidgetStore:
     def __init__(self, *args, **kwargs):
         self._storing_dict = {}
@@ -20,3 +25,34 @@ class FakeWidgetStore:
 
     def del_widgets(self):
         self._storing_dict.clear()
+
+
+class FakeAuthProvider(helpers.auth.AuthProvider):
+    def __init__(self, *args, **kwargs):
+        self.trust = True
+
+    @contextlib.contextmanager
+    def triggered_failure(self):
+        previous_trust = self.trust
+        try:
+            self.trust = False
+            yield
+        finally:
+            self.trust = previous_trust
+
+    def authenticate_creds(self, username, password):
+        if self.trust:
+            return  # authenticated
+        else:
+            raise helpers.auth.AuthenticationError({
+                'was_unexpected_error': False,
+                'unexpected_error': None,
+                'uname': {
+                    'supplied': username,
+                    'was_valid': False
+                },
+                'password': {
+                    'supplied': password,
+                    'was_Valid': False
+                }
+            })

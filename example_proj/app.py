@@ -1,6 +1,9 @@
 import logging
 import json
+import os
 
+import psycopg
+import psycopg_pool
 from httpglue import Request, Response
 from httpglue import WsgiApp
 from httpglue import NoMatchingPathError, NoMatchingMethodError
@@ -21,8 +24,10 @@ def make_app():
         logger=logger,
         default_fallback_err_res=Response(
             status=500,
-            headers={},
-            body=b''
+            headers={
+                'Content-Type': 'application/json'
+            },
+            body=b'{"error": "internal server error", "status": 500, "details": "server error"}'  # noqa
         )
     )
 
@@ -34,11 +39,17 @@ def make_app():
         deserializer=(lambda data: json.loads(data.decode('utf-8')))
     )
 
-    app.basic_auth = auth.DummyBasicAuthHelper(
-        trust=True
+    db_conn_pool = psycopg_pool.ConnectionPool(
+        os.environ.get('PGSQL_DSN'),
+        min_size=10)
+
+    app.basic_auth = auth.BasicAuthHelper(
+        auth_provider=auth.DBUserPassCredsAuthProvider(
+            db_conn_pool
+        )
     )
 
-    app.widget_store = dal.WidgetStore()
+    app.widget_store = dal.WidgetStore(db_conn_pool)
 
     # register endpoints
     app.register_endpoint(
@@ -92,7 +103,7 @@ def make_app():
 
 
 def handle_no_matching_path(app, e, req):
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=404,
         headers={
             'Content-Type': 'application/json'
@@ -106,7 +117,7 @@ def handle_no_matching_path(app, e, req):
 
 
 def handle_no_matching_method(app, e, req):
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=405,
         headers={
             'Content-Type': 'application/json',
@@ -121,8 +132,7 @@ def handle_no_matching_method(app, e, req):
 
 
 def handle_unauthenticated_errors(app, e, req):
-    print(e.details)
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=401,
         headers={
             'Content-Type': 'application/json',
@@ -138,11 +148,11 @@ def handle_unauthenticated_errors(app, e, req):
 
 def handle_unsupported_content_type_errors(app, e, req):
     details = (
-        f"the request's content type of '{e.req_ct_type}' "
+        f"the request's content type of '{e.content_type}' "
         f"was not one of {e.supported_content_types}"
     )
 
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=415,
         headers={
             'Content-Type': 'application/json'
@@ -160,7 +170,7 @@ def handle_unexpected_errors(app, e, req):
         'Unexpected server error occured'
     )
 
-    return app.content_types.make_response(
+    return app.content_types.create_response(
         status=500,
         headers={
             'Content-Type': 'application/json'

@@ -1,0 +1,241 @@
+{
+	"info": {
+		"_postman_id": "524bc9b3-3862-459b-beee-a6f4e0c514db",
+		"name": "Widgets API V1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "/widgets",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test_user_password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/widgets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"widgets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/widgets",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test_user_password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"id\": 1,\n        \"name\": \"Ranma\",\n        \"description\": \"1/2\"\n    },\n    {\n        \"id\": 2,\n        \"name\": \"Akane\",\n        \"description\": \"haircut\"\n    },\n    {\n        \"id\": 3,\n        \"name\": \"Happosai\",\n        \"description\": \"Ranma! brasse da!\"\n    }\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/widgets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"widgets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/widgets",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test_user_password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/widgets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"widgets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/widgets/<specificWidget>",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test_user_password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:8080/widgets/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"widgets",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/widgets/<specificWidget>",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test_user_password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": 1,\n    \"name\": \"Ranma\",\n    \"description\": \"The Anything Goes Style\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/widgets/specificWidget",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"widgets",
+						"specificWidget"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/widgets/<specificWidget>",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test_user_password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/widgets/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"widgets",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

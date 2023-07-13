@@ -1,2 +1,4 @@
 httpglue==1.0.0
+psycopg==3.0.18
+psycopg-pool==3.0.3
 waitress==2.0.0
