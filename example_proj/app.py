@@ -35,8 +35,8 @@ def make_app():
     app.content_types = content_types.ContentHelper()
     app.content_types.add_support(
         mime_type='application/json',
-        serializer=(lambda data: json.dumps(data).encode('utf-8')),
-        deserializer=(lambda data: json.loads(data.decode('utf-8')))
+        serializer=content_types.json_serializer,
+        deserializer=content_types.json_deserializer
     )
 
     db_conn_pool = psycopg_pool.ConnectionPool(

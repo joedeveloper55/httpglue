@@ -8,8 +8,7 @@ It pushes simple to its limits while still providing just enough structure and f
 
 Excluding exceptions, the entire api defines only five classes: WsgiApp, AsgiApp, Headers, Request and Response. The WsgiApp object has only 5 public methods; The AsgiApp object has only 9 public methods. The Headers, Request, and Response objects are just plain old python objects.
 
-There are no dependencies on any third party libraries. The standard library is all that is required.
-It is 100% pure python. It will work wherever you have a recent enough (3.6 or greater) python installation without any hassle.
+There are no dependencies on any third party libraries. The standard library is all that is required. It is 100% pure python. It will work wherever you have a recent enough (3.6 or greater) python installation without any hassle. The maintainers are commited to following [semvar](https://semver.org/) conventions to keep your builds reliable and predictable.
 
 httpglue also pushes explicitness and transparency to their limits. 
 

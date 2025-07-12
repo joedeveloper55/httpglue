@@ -21,7 +21,7 @@ def get_widget(app, req):
                 "details": "not found"
             }
         )
-    widget_data = widget.to_dict()
+    widget_data = widget.asdict()
     return app.content_types.create_response(
         status=200,
         headers={
@@ -34,12 +34,12 @@ def get_widget(app, req):
 def put_widget(app, req):
     app.basic_auth.authenticate(req)
 
-    widget_data = app.content_types.deserialize_body(
+    widget_data = app.content_types.deserialize_req_body(
         ['application/json'],
         req
     )
 
-    widget = Widget.from_dict(widget_data)
+    widget = Widget.fromdict(widget_data)
     if int(req.path_vars['id']) != widget.id:
         return app.content_types.create_response(
             status=400,

@@ -41,10 +41,10 @@ class Widget:
         self._description = val
 
     @classmethod
-    def from_dict(cls, d):
+    def fromdict(cls, d):
         return cls(**d)
 
-    def to_dict(self):
+    def asdict(self):
         return {
             'id': self.id,
             'name': self.name,

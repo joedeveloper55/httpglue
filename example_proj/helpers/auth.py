@@ -186,6 +186,15 @@ class DBUserPassCredsAuthProvider(AuthProvider):
                 }
             })
         else:
+            # WARNING: you should not use sha512 for most
+            # security purposes and instead opt for something
+            # like bcrypt for storing your passwords in a db.
+            # We used sha512 here becuase this is just a simple
+            # exemplar and ease of installation and running is
+            # more important here than bulletproof security,
+            # and using a standardlib module like hashlib
+            # was prefferred over something more complex to install
+            # (bcrypt).
             hashed_n_salted_password = hashlib.sha512(
                 password.encode('utf-8') +
                 results[0]['password_salt'].encode('utf-8')

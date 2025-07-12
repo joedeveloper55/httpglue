@@ -8,7 +8,7 @@ def get_widgets(app, req):
 
     widgets = app.widget_store.get_widgets()
 
-    widgets_data = [w.to_dict() for w in widgets]
+    widgets_data = [w.asdict() for w in widgets]
 
     return app.content_types.create_response(
         status=200,
@@ -22,12 +22,12 @@ def get_widgets(app, req):
 def put_widgets(app, req):
     app.basic_auth.authenticate(req)
 
-    widgets_data = app.content_types.deserialize_body(
+    widgets_data = app.content_types.deserialize_req_body(
         ['application/json'],
         req
     )
 
-    widgets = [Widget.from_dict(wd) for wd in widgets_data]
+    widgets = [Widget.fromdict(wd) for wd in widgets_data]
 
     app.widget_store.put_widgets(widgets)
 

@@ -16,7 +16,7 @@ class WidgetStore:
                     return curs.fetchall()
 
     def _db_row_to_widget(self, row):
-        return Widget.from_dict(row)
+        return Widget.fromdict(row)
 
     def get_widget(self, w_id):
         results = self._query_db(
@@ -89,7 +89,7 @@ class WidgetStore:
                                 UPDATE SET name = %(name)s,
                                            description = %(description)s;
                     """,
-                    (w.to_dict() for w in ws)
+                    (w.asdict() for w in ws)
                 )
 
     def del_widgets(self):

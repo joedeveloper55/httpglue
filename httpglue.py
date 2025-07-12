@@ -1,9 +1,15 @@
-# Copyright 2021, Joseph P McAnulty
-import datetime
-import inspect
-import logging
-import re
+# Copyright 2021 Joseph P McAnulty. All rights reserved.
+import datetime as _datetime
+import inspect as _inspect
+import logging as _logging
+import re as _re
 
+# TODO
+# 2. finish up unit tests, add default reason phrases
+#    see if we can optimize some parts, like pre-compiling regexes, sppeding up some checks, beings strategic with func calls
+# 3. clean up code formating and style, make sure exception messages are consistent (remove or add httpglue.* stuff in messages)
+# 4. complete docs and doctest
+# 5. remove asgi parts
 
 _ASCII_CHARS = {
     chr(val)
@@ -28,18 +34,35 @@ _VALID_RFC_2616_TOKEN_CHARS = \
 _VALID_RFC_2616_TEXT_CHARS = \
     (_ASCII_CHARS - _CTL_CHARS) | {' ', '\t'}
 
+_DEFAULT_REASON_PHRASE_MAPPING = {
+    200: 'OK'
+}
+
 
 class NoMatchingPathError(Exception):
     def __init__(self, path, path_specs):
-        message = f'The path \'{path}\' did not match any of {path_specs}'
+        message = (
+            f'The path \'{path}\' did '
+            'not match any of {path_specs}'
+        )
+        self.path = path
+        self.path_specs = path_specs
         super().__init__(message)
 
 
 class NoMatchingMethodError(Exception):
-    def __init__(self, method, path, allowed_methods, matching_path_specs):
+    def __init__(
+        self,
+        method,
+        path,
+        allowed_methods,
+        matching_path_specs
+    ):
         message = (
-            f'The \'{method}\' method is not one of the allowed methods {allowed_methods} '
-            f'on \'{path}\' (matching path specs: {matching_path_specs})'
+            f'The \'{method}\' method is not one '
+            'of the allowed methods ({allowed_methods}) '
+            f'on \'{path}\' '
+            '(matching path specs: {matching_path_specs})'
         )
         super().__init__(message)
         self.method = method
@@ -49,24 +72,31 @@ class NoMatchingMethodError(Exception):
 
 
 class NoMatchingPredError(Exception):
-    def __init__(self, method, path, matching_method_spec_path_spec_pairs, failed_predicates):
+    def __init__(
+        self,
+        method,
+        path,
+        matching_method_spec_path_spec_pairs,
+        failed_predicates
+    ):
         message = (
-            f'The \'{method} {path}\' request nearly matched some endpoints, but failed due to predicates'
+            f'The \'{method} {path}\' request nearly '
+            'matched an endpoint, but failed due to predicates'
         )
         super().__init__(message)
         self.method = method
         self.path = path
-        self.matching_method_spec_path_spec_pairs = matching_method_spec_path_spec_pairs
+        self.matching_method_spec_path_spec_pairs = \
+            matching_method_spec_path_spec_pairs
         self.failed_predicates = failed_predicates
 
 
 class WSGIRequestMappingError(Exception):
     def __init__(self):
         message = (
-            'an httpglue.Request object could not be made from the '
-            'wsgi callable. this is probably a framework bug, a bug '
-            'in the wsgi server you\'re running your app in, or some '
-            'system error'
+            'An httpglue.Request object could not be made from the '
+            'wsgi callable. This is probably a framework bug or a bug '
+            'in the wsgi server you\'re running your app in.'
         )
         super().__init__(message)
 
@@ -74,17 +104,14 @@ class WSGIRequestMappingError(Exception):
 class WSGIResponseMAppingError(Exception):
     def __init__(self):
         message = (
-            'an httpglue.Response object could not be used by the '
+            'An httpglue.Response object could not be used by the '
             'wsgi callable to make a response to the requester. '
-            'this is probably a framework bug, a bug in the wsgi server '
-            'you\'re running your app in, or some system error'
+            'This is probably a framework bug or a bug in the wsgi server '
+            'you\'re running your app in.'
         )
         super().__init__(message)
 
-# TODO may want to fine tune the many exceptions that could be raised
-# from within class internals. Also need to work on descriptions
-# TODO also may want to swallow up common dict exceptions and replce them
-# with my own ones to simplify errors.
+
 class Headers:
 
     def __init__(self, *args, **kwargs):
@@ -107,7 +134,10 @@ class Headers:
             }
             self._impl_dict = provisional_impl_dict
         else:
-            raise TypeError('too many positional agruments')
+            raise TypeError(
+                f'Headers expected at most 1 '
+                f'arguments, got {len(args)}'
+            )
 
         # support kwargs
         for k, v in kwargs.items():
@@ -136,40 +166,45 @@ class Headers:
     def _validate_key(self, key):
         if type(key) != str:
             raise TypeError( # add specific value to message?
-                'httpglue.Headers key must be of type str, not '
-                '%s' % type(key))
+                f'Headers key must be of type \'str\', not '
+                f'{type(key)}'
+            )
 
         if len(key) < 1:
             raise ValueError(
-                'httpglue.Headers key must be at least one char long')
+                'Headers key must be at least one char long'
+            )
 
         inappropriate_chars = set(key) - _VALID_RFC_2616_TOKEN_CHARS
 
         if len(inappropriate_chars) != 0:
             raise ValueError(
-                'httpglue.Headers key %s is not a valid rfc2616 token. '
+                'Headers key %s is not a valid rfc2616 token. '
                 'It had %s chars in it which are not allowed. '
                 'Only these chars are allowed: %s.' % (
                     key, inappropriate_chars,
                     _VALID_RFC_2616_TOKEN_CHARS
-                ))
+                )
+            )
 
     def _validate_value(self, val):
         if type(val) != str:
             raise TypeError(
-                'httpglue.Headers value must be of type str, not '
-                '%s' % type(val))
+                f'Headers value must be of type \'str\', not '
+                f'{type(val)}'
+            )
 
         inappropriate_chars = set(val) - _VALID_RFC_2616_TEXT_CHARS
 
         if len(inappropriate_chars) != 0:
             raise ValueError(
-                'httpglue.Headers value %s is not a valid rfc2616 text. '
+                'Headers value %s is not a valid rfc2616 text. '
                 'It had %s chars in it which are not allowed. '
                 'Only these chars are allowed: %s.' % (
                     val, inappropriate_chars,
                     _VALID_RFC_2616_TEXT_CHARS
-                )) 
+                )
+            ) 
 
     def _looks_like_a_mapping(self, val):
         # here, we check a bunch of properties/methods
@@ -201,11 +236,14 @@ class Headers:
         self._validate_key(key)
         key = self._convert_key_to_camel_dash_form(key)
         return key in self._impl_dict
-        
+
     def __getitem__(self, key):
         self._validate_key(key)
         key = self._convert_key_to_camel_dash_form(key)
-        return self._impl_dict[key]
+        try:
+            return self._impl_dict[key]
+        except KeyError:
+            raise KeyError(key)
 
     def __setitem__(self, key, val):
         self._validate_key(key)
@@ -216,12 +254,14 @@ class Headers:
     def __delitem__(self, key):
         self._validate_key(key)
         key = self._convert_key_to_camel_dash_form(key)
-        del self._impl_dict[key]
+        try:
+            del self._impl_dict[key]
+        except KeyError:
+            raise KeyError(key)
 
     def __eq__(self, other):
         if type(other) != Headers:
-            raise TypeError(
-                'expected %s, got %s' % (Headers, type(other)))
+            return False
 
         key_diff = set(self.keys()) ^ set(other.keys())
         if key_diff != set():
@@ -236,7 +276,7 @@ class Headers:
         return True
 
     def __ne__(self, other):
-        return not self == other
+        return not (self == other)
     
     __hash__ = None
         
@@ -288,7 +328,10 @@ class Headers:
         return self._impl_dict.pop(key, default)
 
     def popitem(self):
-        return self._impl_dict.popitem()
+        try:
+            return self._impl_dict.popitem()
+        except KeyError:
+            raise KeyError('popitem(): Headers is empty')
 
     def clear(self):
         self._impl_dict.clear()
@@ -309,14 +352,15 @@ class Request:
         port=None,
         proto='http',
         http_version=None,
-        path_vars={},
+        path_vars=None,
         query_str='',
         start_time=None
     ):
         self.http_version = http_version
         self.method = method
         self.path = path
-        self.path_vars = path_vars
+        self.path_vars = \
+            {} if path_vars is None else path_vars
         self.query_str = query_str
         self.headers = headers
         self.body = body
@@ -324,6 +368,20 @@ class Request:
         self.host = host
         self.port = port
         self.proto = proto
+
+    @property
+    def http_version(self):
+        return self._http_version
+
+    @http_version.setter
+    def http_version(self, value):
+        if type(value) not in (type(None), str):
+            raise TypeError(
+                'http_version attribute of httpglue.Request object '
+                'must be of type str or NoneType, got %s' % type(value)
+            )
+
+        self._http_version = value
 
     @property
     def method(self):
@@ -335,6 +393,12 @@ class Request:
             raise TypeError(
                 'method attribute of httpglue.Request object '
                 'must be of type str, got %s' % type(value)
+            )
+
+        if len(value) < 1:
+            raise ValueError(
+                'method attribute of httpglue.Request object '
+                'must be at least one character long.'
             )
 
         inappropriate_chars = set(value) - _VALID_RFC_2616_TOKEN_CHARS
@@ -435,7 +499,7 @@ class Request:
 
     @start_time.setter
     def start_time(self, value):
-        if type(value) not in (type(None), datetime.datetime):
+        if type(value) not in (type(None), _datetime.datetime):
             raise TypeError(
                 'start_time attribute of httpglue.Response object '
                 'must be of type datetime.datetime or NoneType, got %s' % type(value)
@@ -545,8 +609,8 @@ class Response:
     def status(self, value):
         if type(value) is not int:
             raise TypeError(
-                'status attribute of httpglue.Response object '
-                'must be of type int, got %s' % type(value)
+                'status attribute of Response object '
+                'must be of type \'int\', got \'%s\'' % type(value)
             )
         if value < 100 or value > 599:
             raise ValueError(
@@ -563,15 +627,15 @@ class Response:
     def reason(self, value):
         if type(value) is not str:
             raise TypeError(
-                'reason attribute of httpglue.Response object '
-                'must be of type str, got %s' % type(value)
+                'reason attribute of Response object '
+                'must be of type \'str\', got \'%s\'' % type(value)
             )
 
         inappropriate_chars = set(value) - _VALID_RFC_2616_TOKEN_CHARS
 
         if len(inappropriate_chars) != 0:
             raise ValueError(
-                'httpglue.Response.reason \'%s\' is not a valid rfc2616 token. '
+                'Response.reason \'%s\' is not a valid rfc2616 token. '
                 'It had %s chars in it which are not allowed. '
                 'Only these chars are allowed: %s.' % (
                     value, inappropriate_chars,
@@ -588,9 +652,9 @@ class Response:
     def headers(self, value):
         if type(value) not in (dict, Headers):
             raise TypeError(
-                'headers attribute of httpglue.Response object '
-                'must be of type dict or httpglue.Headers, '
-                'got %s' % type(value)
+                'headers attribute of Response object '
+                'must be of type \'dict\' or \'Headers\', '
+                'got \'%s\'' % type(value)
             )
         
         self._headers = Headers(value) if type(value) == dict else value
@@ -656,10 +720,10 @@ class WsgiApp:
 
         :rtype httpglue.WsgiApp: the newly constructed httpglue WsgiApp
         """
-        if not isinstance(logger, logging.Logger):
+        if not isinstance(logger, _logging.Logger):
             raise TypeError(
              'expected logger to be of type '
-             '%s. got %s' % (logging.Logger, type(logger)))
+             '%s. got %s' % (_logging.Logger, type(logger)))
 
         self.logger = logger
 
@@ -677,9 +741,9 @@ class WsgiApp:
                 raise ValueError(
                     'wsgi has a special stipulation that header values '
                     'must not contain control characters. Control '
-                    'characters %s were found in %s',
-                    str(set(header_val) & set('\t\r\n\0\a\b\v\f')),
-                    header_val)
+                    'characters %s were found in %s' %
+                    (str(set(header_val) & set('\t\r\n\0\a\b\v\f')),
+                    header_val))
 
         self.default_fallback_err_res = default_fallback_err_res
 
@@ -758,7 +822,7 @@ class WsgiApp:
                 port=int(environ['SERVER_PORT']),
                 proto=environ['wsgi.url_scheme'],
                 http_version=environ.get('SERVER_PROTOCOL', ''),
-                start_time=datetime.datetime.now()
+                start_time=_datetime.datetime.now()
             )
 
         except Exception:
@@ -788,13 +852,13 @@ class WsgiApp:
             )
 
             for header_val in res.headers.values():
-                if not set(header_val) & set('\t\r\n\0\a\b\v\f') == {}:
+                if not set(header_val) & set('\t\r\n\0\a\b\v\f') == set():
                     raise ValueError(
                         'wsgi has a special stipulation that header '
                         'values must not contain control characters. '
-                        'Control characters %s were found in %s',
-                        str(set(header_val) & set('\t\r\n\0\a\b\v\f')),
-                        header_val)
+                        'Control characters %s were found in %s' %
+                        (str(set(header_val) & set('\t\r\n\0\a\b\v\f')),
+                        header_val))
             wsgi_res_headers = list(res.headers.items())
 
             wsgi_res_body = res.body
@@ -842,8 +906,8 @@ class WsgiApp:
     def _extract_path_vars(self, path_spec, path):
         pattern = f'^{path_spec}$'
         path_vars = {}
-        path_vars.update(enumerate(re.match(pattern, path).groups()))
-        path_vars.update(re.match(pattern, path).groupdict())
+        path_vars.update(enumerate(_re.match(pattern, path).groups()))
+        path_vars.update(_re.match(pattern, path).groupdict())
         return path_vars
 
     def _validate_path_spec(self, path_spec):
@@ -893,13 +957,13 @@ class WsgiApp:
                 'got types %s' % list(e_type for e_type in excs_list))
 
     def _validate_req_handler(self, f):
-        call_signature = inspect.signature(f)
+        call_signature = _inspect.signature(f)
 
         params_right_length = len(call_signature.parameters) == 2
 
         params_right_kind = all(
-            param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-            and param.default == inspect.Parameter.empty
+            param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD
+            and param.default == _inspect.Parameter.empty
             for param in call_signature.parameters.values()
         )
 
@@ -915,14 +979,14 @@ class WsgiApp:
             )
 
     def _validate_pred(self, f):
-        call_signature = inspect.signature(f)
+        call_signature = _inspect.signature(f)
 
         params_right_length = len(call_signature.parameters) == 1
 
         param = list(call_signature.parameters.values())[0]
         param_right_kind = (
-            param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-            and param.default == inspect.Parameter.empty
+            param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD
+            and param.default == _inspect.Parameter.empty
         )
 
         if not (params_right_length and param_right_kind):
@@ -937,13 +1001,13 @@ class WsgiApp:
             )
 
     def _validate_err_handler(self, f):
-        call_signature = inspect.signature(f)
+        call_signature = _inspect.signature(f)
 
         params_right_length = len(call_signature.parameters) == 3
 
         params_right_kind = all(
-            param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-            and param.default == inspect.Parameter.empty
+            param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD
+            and param.default == _inspect.Parameter.empty
             for param in call_signature.parameters.values()
         )
 
@@ -974,7 +1038,7 @@ class WsgiApp:
 
         for endpoint in self._endpoint_table:
 
-            if re.match(f"^{endpoint['path_spec']}$", req.path):
+            if _re.match(f"^{endpoint['path_spec']}$", req.path):
                 matching_path_spec_found = True
                 matching_path_specs.add(endpoint['path_spec'])
             else:
@@ -1371,7 +1435,11 @@ class AsgiApp:
     ):
         pass
 
-    def register_err_handler(self, excs_list, f):
+    def register_err_handler(
+        self,
+        excs_list,
+        f
+    ):
         pass
 
     async def startup(self):

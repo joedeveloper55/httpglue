@@ -8,7 +8,7 @@ Its goal is to be the simplest python http framework available while still being
 
 Beyond simplicity, the second most important goal of httpglue is transparency. What the framework is doing at any time and what happens in certain cases must never be a mystery to users of httpglue. The api and framework behavior must be sufficiently small, documented, and un-abstracted such that an experiencd python developer using it can thoroughly predict and understand what is going on in their apps, and hold the whole api and request flow in their heads. The learning curve must be very small.
 
-Keeping dependencies as minimal as is possible is also a major goal. httpglue must use only the standard library. Installation and maintainence should be completely free of pain.
+Keeping dependencies as minimal as is possible is also a major goal. httpglue must use only the standard library. Installation and maintainence should be completely free of pain. Maintainers must also follow [semvar](https://semver.org/) conventions with regards to versioning.
 
 See [the design docs](https://github.com/joedeveloper55/httpglue/blob/master/DESIGN.md) for more details on the httpglue philosophy.
 
